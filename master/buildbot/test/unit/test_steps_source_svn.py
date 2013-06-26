@@ -1504,6 +1504,8 @@ class TestGetUnversionedFiles(unittest.TestCase):
         "http://foo.com/x//", "http://foo.com/x")
     test_svnUriCanonicalize_double_slash = _makeSUCTest(
         "http://foo.com/x//y", "http://foo.com/x/y")
+    test_svnUriCanonicalize_slash = _makeSUCTest(
+        "/", "/")
     test_svnUriCanonicalize_dot = _makeSUCTest(
         "http://foo.com/x/./y", "http://foo.com/x/y")
     test_svnUriCanonicalize_dot_dot = _makeSUCTest(

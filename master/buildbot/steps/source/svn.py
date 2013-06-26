@@ -254,7 +254,7 @@ class SVN(Source):
             msg = "Corrupted xml, aborting step"
             self.stdio_log.addHeader(msg)
             raise buildstep.BuildStepFailed()
-        defer.returnValue(extractedurl == self.repourl)
+        defer.returnValue(extractedurl == svnUriCanonicalize(self.repourl)
         return
 
     @defer.inlineCallbacks
@@ -385,7 +385,7 @@ class SVN(Source):
 
     @staticmethod
     def svnUriCanonicalize(uri):
-        collapse = re.compile('([^/]+/\.\./?|/\./|//|/\.$|/\.\.$)')
+        collapse = re.compile('([^/]+/\.\./?|/\./|//|/\.$|/\.\.$|^/\.\.)')
         server_authority = re.compile('^(?:([^\@]+)\@)?([^\:]+)(?:\:(.+))?$')
         default_port = {   'http': '80',
                            'https': '443',
@@ -394,7 +394,7 @@ class SVN(Source):
         relative_schemes = ['http', 'https', 'svn']
         quote = lambda uri: urllib.quote(uri, "!$&'()*+,-./:=@_~")
 
-        if len(uri) == 0:
+        if len(uri) == 0 or uri == '/':
             return uri
 
         (scheme, authority, path, parameters, query, fragment) = urlparse(uri)
@@ -419,7 +419,9 @@ class SVN(Source):
 
         path = quote(urllib.unquote(path))
         canonical_uri = urlunparse((scheme, authority, path, parameters, query, fragment))
-        if canonical_uri[-1] == '/' and canonical_uri[-2] != '/':
+        if canonical_uri =='/':
+            return canonical_uri
+        elif canonical_uri[-1] == '/' and canonical_uri[-2] != '/':
             return canonical_uri[:-1]
         else:
             return canonical_uri
