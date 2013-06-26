@@ -254,7 +254,7 @@ class SVN(Source):
             msg = "Corrupted xml, aborting step"
             self.stdio_log.addHeader(msg)
             raise buildstep.BuildStepFailed()
-        defer.returnValue(extractedurl == svnUriCanonicalize(self.repourl)
+        defer.returnValue(extractedurl == self.svnUriCanonicalize(self.repourl))
         return
 
     @defer.inlineCallbacks

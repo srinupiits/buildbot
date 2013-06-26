@@ -334,6 +334,38 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
+    def test_mode_incremental_repourl_canonical(self):
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/trunk/test app',
+                        mode='incremental'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml',
+                                 '--non-interactive',
+                                 '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                stdout="""<?xml version="1.0"?><url>http://svn.local/trunk/test%20app</url>""")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio',
+                stdout=self.svn_info_stdout_xml)
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'SVN')
+        return self.runStep()
+    
     def test_mode_incremental_repourl_not_updatable(self):
         self.setupStep(
                 svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
