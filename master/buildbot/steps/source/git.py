@@ -480,7 +480,7 @@ class Git(Source):
         d.addCallback(check)
         return d
 
-    def patch(self, _, patch):
-        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
-                initialStdin=patch[1])
-        return d
+    # def patch(self, _, patch):
+    #     d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
+    #             initialStdin=patch[1])
+    #     return d
