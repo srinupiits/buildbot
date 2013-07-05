@@ -184,55 +184,23 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         self.checkoutDelay value."""
         return None
 
-
-    def _doRemoteShellCommand(self, _, command):
+    def applyPatch(self, patchlevel):
+        patch_command = ['patch', '-p%s' % patchlevel, '--remove-empty-files',
+                         '--force', '--forward', '-i', '.buildbot-diff']
         cmd = buildstep.RemoteShellCommand(self.workdir,
-                                           cmd,
+                                           patch_command,
                                            env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout)
+                                           logEnviron=self.logEnviron)
 
         cmd.userLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
             if cmd.didFail():
-                log.msg('%s failed to execute' % cmd)
                 raise buildstep.BuildStepFailed()
-            if collectStdout:
-                return cmd.stdout
-            else:
-                return cmd.rc
+            return cmd.rc
+
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
-
-    def _downloadFile(self, filename, slavedest):
-        try:
-            fp = open(filename, 'rb')
-        except IOError:
-            self.addCompleteLog('stderr',
-                                'File %r not available at master' % filename)
-            eventually(BuildStep.finished, self, FAILURE)
-            return
-
-        fileReader = _FileReader(fp)
-        args = {
-            'slavedest': slavedest,
-            'maxsize': None,
-            'reader': fileReader,
-            'blocksize': 16*1024,
-            'workdir': self.workdir,
-            }
-        cmd = buildstep.RemoteCommand('downloadFile', args)
-        d = self.runCommand(cmd)
-        def evaluateCommand(cmd):
-            if cmd.didFail():
-                raise buildstep.BuildStepFailed()
-                return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
-
-        return d
-
 
     def patch(self, _, patch):
         patchlevel = patch[0]
@@ -240,23 +208,56 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         root = None
         if len(patch) >= 3:
             root = patch[2]
-        # TODO: update work directory if root is not None
+
+        if (root and
+            os.path.abspath(os.path.join(self.workdir, root)
+                            ).startswith(os.path.abspath(self.workdir))):
+            self.workdir = os.path.join(self.workdir, root)
+
+        def _downloadFile(filename, slavedest):
+            try:
+                fp = open(filename, 'rb')
+            except IOError:
+                self.addCompleteLog('stderr',
+                                    'File %r not available at master' % filename)
+                eventually(BuildStep.finished, self, FAILURE)
+                return
+            
+            fileReader = _FileReader(fp)
+            args = {
+                'slavedest': slavedest,
+                'maxsize': None,
+                'reader': fileReader,
+                'blocksize': 16*1024,
+                'workdir': self.workdir,
+                }
+            cmd = buildstep.RemoteCommand('downloadFile', args)
+            d = self.runCommand(cmd)
+            def evaluateCommand(cmd):
+                if cmd.didFail():
+                    raise buildstep.BuildStepFailed()
+                return cmd.rc
+                
+            d.addCallback(lambda _: evaluateCommand(cmd))
+            return d
 
         open(".buildbot-diff", "w").write(diff)
         open(".buildbot-patched", "w").write("patched\n")
-
-        d = self._downloadFile(".buildbot-diff", self.workdir)
-
-        d.addCallback(lambda _ : self._downloadFile(".buildbot-patched", self.workdir))
+        d = _downloadFile(".buildbot-diff", self.workdir)
+        d.addCallback(lambda _ : _downloadFile(".buildbot-patched", self.workdir))
         os.unlink(".buildbot-diff")
         os.unlink(".buildbot-patched")
-
-        patch_command = ['patch', '-p%s' % patchlevel, '--remove-empty-files',
-                         '--force', '--forward', '-i', '.buildbot-diff']
-        d.addCallback(self._doRemoteShellCommand(patch_command))
-        # TODO: remove remote .bulidbot-diff file
+        d.addCallback(lambda _: self.applyPatch(patchlevel))
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
+                                                'logEnviron':self.logEnviron})
+        cmd.useLog(self.stdio_log, False)
+        d.addCallback(lambda _: self.runCommand(cmd))
         return d
-                                           
+
+    def sourcedirIsPatched(self):
+        d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
+        return d
+        
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)
