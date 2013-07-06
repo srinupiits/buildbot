@@ -192,7 +192,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                                            env=self.env,
                                            logEnviron=self.logEnviron)
 
-        cmd.userLog(self.stdio_log, False)
+        cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
             if cmd.didFail():

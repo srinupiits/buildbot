@@ -18,7 +18,7 @@ from twisted.python.reflect import namedModule
 from buildbot.steps.source import git
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import config, sourcesteps
-from buildbot.test.fake.remotecommand import ExpectShell, Expect
+from buildbot.test.fake.remotecommand import ExpectRemoteRef, ExpectShell, Expect
 from buildbot.steps.transfer import _FileReader
 
 class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
@@ -172,13 +172,20 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
-                                        reader=_FileReader('.buildbot-patched'),
+                                        reader=ExpectRemoteRef(_FileReader),
                                         slavedest='wkdir', workdir='wkdir',))
             + 0,
-            # ExpectShell(workdir='wkdir',
-            #             command=['git', 'apply', '--index', '-p', '1'],
-            #             initialStdin='patch')
-            # + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+                                        reader=ExpectRemoteRef(_FileReader),
+                                        slavedest='wkdir', workdir='wkdir',))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['patch', '-p1', '--remove-empty-files',
+                                 '--force', '--forward', '-i', '.buildbot-diff'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
+                                 logEnviron=True))
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
@@ -216,12 +223,17 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
-                                        slavedest='wkdir', workdir='wkdir'))
+                                        reader=ExpectRemoteRef(_FileReader),
+                                        slavedest='wkdir', workdir='wkdir',))
             + 0,
-            # ExpectShell(workdir='wkdir',
-            #             command=['git', 'apply', '--index', '-p', '1'],
-            #             initialStdin='patch')
-            # + 1,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+                                        reader=ExpectRemoteRef(_FileReader),
+                                        slavedest='wkdir', workdir='wkdir',))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['patch', '-p1', '--remove-empty-files',
+                                 '--force', '--forward', '-i', '.buildbot-diff'])
+            + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
         self.expectNoProperty('got_revision')

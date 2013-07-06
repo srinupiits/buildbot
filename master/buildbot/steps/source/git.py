@@ -149,7 +149,6 @@ class Git(Source):
         def checkPatched(patched):
             if patched:
                 d.addCallback(lambda _: self._dovccmd(['clean', '-f', '-d', '-x']))
-
         d.addCallback(checkPatched)
 
         if self.mode == 'incremental':
@@ -486,9 +485,4 @@ class Git(Source):
             return False
 
         d.addCallback(check)
-        return d
-
-    def _applyPatch(self, _, patch):
-        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
-                initialStdin=patch[1])
         return d
