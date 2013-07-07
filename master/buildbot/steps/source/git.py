@@ -148,7 +148,9 @@ class Git(Source):
         d.addCallback(lambda _: self.sourcedirIsPatched())
         def checkPatched(patched):
             if patched:
-                d.addCallback(lambda _: self._dovccmd(['clean', '-f', '-d', '-x']))
+                return self._dovccmd(['clean', '-f', '-d', '-x'])
+            else:
+                return 0
         d.addCallback(checkPatched)
 
         if self.mode == 'incremental':

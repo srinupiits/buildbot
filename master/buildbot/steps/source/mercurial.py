@@ -104,7 +104,9 @@ class Mercurial(Source):
         d.addCallback(lambda _: self.sourcedirIsPatched())
         def checkPatched(patched):
             if patched:
-                d.addCallback(lambda _: self._dovccmd(['--config', 'extensions.purge=', 'purge']))
+                return self._dovccmd(['--config', 'extensions.purge=', 'purge'])
+            else:
+                return 0
         d.addCallback(checkPatched)
 
         if self.branchType == 'dirname':
