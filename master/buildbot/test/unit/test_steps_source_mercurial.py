@@ -237,11 +237,13 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
                                         reader=ExpectRemoteRef(_FileReader),
-                                        slavedest='wkdir', workdir='wkdir',))
+                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
                                         reader=ExpectRemoteRef(_FileReader),
-                                        slavedest='wkdir', workdir='wkdir',))
+                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
@@ -302,11 +304,13 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
                                         reader=ExpectRemoteRef(_FileReader),
-                                        slavedest='wkdir', workdir='wkdir',))
+                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
                                         reader=ExpectRemoteRef(_FileReader),
-                                        slavedest='wkdir', workdir='wkdir',))
+                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',

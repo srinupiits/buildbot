@@ -23,6 +23,8 @@ from buildbot.status.builder import SKIPPED, FAILURE
 from buildbot.steps.slave import CompositeStepMixin
 from buildbot.steps.transfer import _FileReader
 from buildbot.process import buildstep
+from buildbot.process.buildstep import BuildStep
+from buildbot.util.eventual import eventually
 
 class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the buildslave.
@@ -225,13 +227,16 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             
             fileReader = _FileReader(fp)
             args = {
-                'slavedest': slavedest,
+                'slavedest': filename,
                 'maxsize': None,
                 'reader': fileReader,
                 'blocksize': 16*1024,
                 'workdir': self.workdir,
+                'mode' : None
                 }
             cmd = buildstep.RemoteCommand('downloadFile', args)
+            cmd.useLog(self.stdio_log, False)
+            log.msg("Downloading file: %s" % (filename))
             d = self.runCommand(cmd)
             def evaluateCommand(cmd):
                 if cmd.didFail():
@@ -245,8 +250,12 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         open(".buildbot-patched", "w").write("patched\n")
         d = _downloadFile(".buildbot-diff", self.workdir)
         d.addCallback(lambda _ : _downloadFile(".buildbot-patched", self.workdir))
-        os.unlink(".buildbot-diff")
-        os.unlink(".buildbot-patched")
+        def removeFile(_, filename):
+            os.unlink(filename)
+            return _
+        d.addCallback(removeFile, ".buildbot-diff")
+        d.addCallback(removeFile, ".buildbot-patched")
+
         d.addCallback(lambda _: self.applyPatch(patchlevel))
         cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
                                                 'logEnviron':self.logEnviron})
