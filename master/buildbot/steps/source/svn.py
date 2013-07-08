@@ -87,6 +87,9 @@ class SVN(Source):
             d.addCallback(self.full)
         elif self.mode == 'incremental':
             d.addCallback(self.incremental)
+
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)

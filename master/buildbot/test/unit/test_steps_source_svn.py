@@ -1182,7 +1182,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_export_patch(self):
         self.setupStep(
                 svn.SVN(repourl='http://svn.local/app/trunk',
-                                    mode='full', method='export'))
+                                    mode='full', method='export'),
+                patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -1220,6 +1221,23 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+                                        reader=ExpectRemoteRef(_FileReader),
+                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+                                        reader=ExpectRemoteRef(_FileReader),
+                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['patch', '-p1', '--remove-empty-files',
+                                 '--force', '--forward', '-i', '.buildbot-diff'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
+                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
