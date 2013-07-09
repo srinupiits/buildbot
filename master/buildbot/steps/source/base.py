@@ -15,6 +15,7 @@
 
 
 import os
+import StringIO
 
 from twisted.python import log
 from twisted.internet import defer
@@ -24,7 +25,6 @@ from buildbot.steps.slave import CompositeStepMixin
 from buildbot.steps.transfer import _FileReader
 from buildbot.process import buildstep
 from buildbot.process.buildstep import BuildStep
-from buildbot.util.eventual import eventually
 
 class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the buildslave.
@@ -216,20 +216,12 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                             ).startswith(os.path.abspath(self.workdir))):
             self.workdir = os.path.join(self.workdir, root)
 
-        def _downloadFile(filename, slavedest):
-            try:
-                fp = open(filename, 'rb')
-            except IOError:
-                self.addCompleteLog('stderr',
-                                    'File %r not available at master' % filename)
-                eventually(BuildStep.finished, self, FAILURE)
-                return
-            
-            fileReader = _FileReader(fp)
+        def _downloadFile(buf, filename):
+            filereader = _FileReader(StringIO.StringIO(buf))
             args = {
                 'slavedest': filename,
                 'maxsize': None,
-                'reader': fileReader,
+                'reader': filereader,
                 'blocksize': 16*1024,
                 'workdir': self.workdir,
                 'mode' : None
@@ -238,24 +230,16 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             cmd.useLog(self.stdio_log, False)
             log.msg("Downloading file: %s" % (filename))
             d = self.runCommand(cmd)
-            def evaluateCommand(cmd):
+            def evaluateCommand(_):
                 if cmd.didFail():
                     raise buildstep.BuildStepFailed()
                 return cmd.rc
                 
-            d.addCallback(lambda _: evaluateCommand(cmd))
+            d.addCallback(evaluateCommand)
             return d
 
-        open(".buildbot-diff", "w").write(diff)
-        open(".buildbot-patched", "w").write("patched\n")
-        d = _downloadFile(".buildbot-diff", self.workdir)
-        d.addCallback(lambda _ : _downloadFile(".buildbot-patched", self.workdir))
-        def removeFile(_, filename):
-            os.unlink(filename)
-            return _
-        d.addCallback(removeFile, ".buildbot-diff")
-        d.addCallback(removeFile, ".buildbot-patched")
-
+        d = _downloadFile(diff, ".buildbot-diff")
+        d.addCallback(lambda _ : _downloadFile("patched\n", ".buildbot-patched"))
         d.addCallback(lambda _: self.applyPatch(patchlevel))
         cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
                                                 'logEnviron':self.logEnviron})
