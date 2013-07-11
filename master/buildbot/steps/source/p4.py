@@ -206,7 +206,7 @@ class P4(Source):
 
         if debug_logging:
             log.msg("P4:_dovccmd():workdir->%s" % self.workdir)
-        cmd = buildstep.RemoteShellCommand(self.workdir, command,
+        self.cmd = cmd = buildstep.RemoteShellCommand(self.workdir, command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            collectStdout=collectStdout,

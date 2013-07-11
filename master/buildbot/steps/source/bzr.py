@@ -200,7 +200,7 @@ class Bzr(Source):
         return lastChange
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['bzr'] + command,
+        self.cmd = cmd = buildstep.RemoteShellCommand(self.workdir, ['bzr'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,

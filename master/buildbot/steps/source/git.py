@@ -314,7 +314,7 @@ class Git(Source):
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
         full_command.extend(command)
-        cmd = buildstep.RemoteShellCommand(self.workdir,
+        self.cmd = cmd = buildstep.RemoteShellCommand(self.workdir,
                                            full_command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,

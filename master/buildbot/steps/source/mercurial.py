@@ -229,7 +229,7 @@ class Mercurial(Source):
     def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS}):
         if not command:
             raise ValueError("No command specified")
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
+        self.cmd = cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,

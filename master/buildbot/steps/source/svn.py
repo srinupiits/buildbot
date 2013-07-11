@@ -374,7 +374,7 @@ class SVN(Source):
         defer.returnValue(0)
 
     def checkSvn(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
+        self.cmd = cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout)

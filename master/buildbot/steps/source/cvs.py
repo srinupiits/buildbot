@@ -160,7 +160,7 @@ class CVS(Source):
         command = ['cvsdiscard']
         if ignore_ignores:
             command += ['--ignore']
-        cmd = buildstep.RemoteShellCommand(self.workdir, command,
+        self.cmd = cmd = buildstep.RemoteShellCommand(self.workdir, command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout)
@@ -224,7 +224,7 @@ class CVS(Source):
             workdir = self.workdir
         if not command:
             raise ValueError("No command specified")
-        cmd = buildstep.RemoteShellCommand(workdir, ['cvs'] +
+        self.cmd = cmd = buildstep.RemoteShellCommand(workdir, ['cvs'] +
                                            command,
                                            env=self.env,
                                            timeout=self.timeout,
