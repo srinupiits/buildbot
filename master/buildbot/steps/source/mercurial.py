@@ -131,7 +131,7 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
-            yield self.clobber(None)
+            yield self.clobber()
             return
 
         updatable = yield self._sourcedirIsUpdatable()
@@ -167,7 +167,7 @@ class Mercurial(Source):
         d.addCallback(self._pullUpdate)
         return d
 
-    def clobber(self, _):
+    def clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
@@ -212,7 +212,7 @@ class Mercurial(Source):
         if current_branch != self.update_branch and self.clobberOnBranchChange:
                 msg += ' Clobbering.'
                 log.msg(msg)
-                yield self.clobber(None)
+                yield self.clobber()
                 return
         msg += ' Updating.'
         log.msg(msg)
