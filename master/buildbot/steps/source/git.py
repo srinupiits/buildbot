@@ -138,6 +138,7 @@ class Git(Source):
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
+
         d = self.checkGit()
         def checkInstall(gitInstalled):
             if not gitInstalled:
@@ -225,17 +226,21 @@ class Git(Source):
     def clobber(self):
         d = self._doClobber()
         d.addCallback(lambda _: self._fullClone(shallowClone=self.shallow))
-        d.addCallback(self.retry)
+        if self.retry:
+            d.addCallback(self._retry)
         return d
 
-    def retry(self, res):
-        if res == 0:
+    def _retry(self, res):
+        delay, repeats = self.retry
+        if self.stopped or res == 0:
             return res
-        else:
-            d = defer.Deferred()
-            d.addCallback(lambda _: self.clobber())
-            reactor.callLater(2, d.callback, None)
+        if repeats > 0:
+            log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+            self.retry = (delay, repeats-1)
+            d = task.deferLater(reactor, delay, self.clobber)
             return d
+        return res
 
     def fresh(self):
         command = ['clean', '-f', '-d', '-x']
@@ -324,7 +329,7 @@ class Git(Source):
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
         full_command.extend(command)
-        cmd = buildstep.RemoteShellCommand(self.workdir,
+        self.cmd = cmd = buildstep.RemoteShellCommand(self.workdir,
                                            full_command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
