@@ -417,7 +417,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'clone',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
-            + 0,
+            + 1,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',

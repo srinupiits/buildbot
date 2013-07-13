@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor, task
 
 from buildbot import config as bbconfig
 from buildbot.process import buildstep
@@ -225,7 +225,17 @@ class Git(Source):
     def clobber(self):
         d = self._doClobber()
         d.addCallback(lambda _: self._fullClone(shallowClone=self.shallow))
+        d.addCallback(self.retry)
         return d
+
+    def retry(self, res):
+        if res == 0:
+            return res
+        else:
+            d = defer.Deferred()
+            d.addCallback(lambda _: self.clobber())
+            reactor.callLater(2, d.callback, None)
+            return d
 
     def fresh(self):
         command = ['clean', '-f', '-d', '-x']
