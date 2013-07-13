@@ -382,8 +382,7 @@ class Git(Source):
         elif self.retryFetch:
             yield self._fetch(None)
         elif self.clobberOnFailure:
-            yield self._doClobber()
-            yield self._fullClone()
+            yield self.clobber()
         else:
             raise buildstep.BuildStepFailed()
 
@@ -427,9 +426,7 @@ class Git(Source):
         def clobber(res):
             if res != 0:
                 if self.clobberOnFailure:
-                    d = self._doClobber()
-                    d.addCallback(lambda _: self._fullClone())
-                    return d
+                    return self.clobber()
                 else:
                     raise buildstep.BuildStepFailed()
             else:
