@@ -137,6 +137,8 @@ class Bzr(Source):
             return res
         d.addCallback(lambda _: checkRemoval(cmd.rc))
         d.addCallback(lambda _: self._doFull())
+        if self.retry:
+            d.addCallback(self._retry, self.clobber)
         return d
 
     def copy(self):

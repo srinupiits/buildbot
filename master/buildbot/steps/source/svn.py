@@ -138,15 +138,16 @@ class SVN(Source):
 
         yield self._dovccmd(command)
 
-    @defer.inlineCallbacks
     def clobber(self):
-        yield self.runRmdir(self.workdir)
-
+        d = self.runRmdir(self.workdir)
         checkout_cmd = ['checkout', self.repourl, '.']
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
 
-        yield self._dovccmd(checkout_cmd)
+        d.addCallback(lambda _: self._dovccmd(checkout_cmd))
+        if self.retry:
+            d.addCallback(self._retry, self.clobber)
+        return d
 
     def fresh(self):
         d = self.purge(True)

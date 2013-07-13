@@ -167,13 +167,19 @@ class Mercurial(Source):
         d.addCallback(self._pullUpdate)
         return d
 
-    def clobber(self):
+    def _clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self._dovccmd(['clone', '--noupdate'
                                                , self.repourl, "."]))
+        if self.retry:
+            d.addCallback(self._retry, self._clobber)
+        return d
+
+    def clobber(self):
+        d = self._clobber()
         d.addCallback(self._update)
         return d
 

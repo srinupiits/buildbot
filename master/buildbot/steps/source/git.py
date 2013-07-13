@@ -227,20 +227,8 @@ class Git(Source):
         d = self._doClobber()
         d.addCallback(lambda _: self._fullClone(shallowClone=self.shallow))
         if self.retry:
-            d.addCallback(self._retry)
+            d.addCallback(self._retry, self.clobber)
         return d
-
-    def _retry(self, res):
-        delay, repeats = self.retry
-        if self.stopped or res == 0:
-            return res
-        if repeats > 0:
-            log.msg("Checkout failed, trying %d more times after %d seconds" 
-                    % (repeats, delay))
-            self.retry = (delay, repeats-1)
-            d = task.deferLater(reactor, delay, self.clobber)
-            return d
-        return res
 
     def fresh(self):
         command = ['clean', '-f', '-d', '-x']

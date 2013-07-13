@@ -18,6 +18,7 @@ import os
 import StringIO
 
 from twisted.python import log
+from twisted.internet import reactor, task
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import SKIPPED, FAILURE
 from buildbot.steps.slave import CompositeStepMixin
@@ -254,7 +255,20 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     def sourcedirIsPatched(self):
         d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
-        
+
+    def _retry(self, res, retry_func):
+        print "Result", res, self.stopped, retry_func, self.retry
+        if self.stopped or res == 0:
+            return res
+        delay, repeats = self.retry
+        if repeats > 0:
+            log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+            self.retry = (delay, repeats-1)
+            d = task.deferLater(reactor, delay, retry_func)
+            return d
+        return res
+
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)

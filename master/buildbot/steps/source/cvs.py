@@ -122,6 +122,8 @@ class CVS(Source):
             return res
         d.addCallback(lambda _: checkRemoval(cmd.rc))
         d.addCallback(lambda _: self.doCheckout(self.workdir))
+        if self.retry:
+            d.addCallback(self._retry, self.clobber)
         return d
 
     def fresh(self, ):
