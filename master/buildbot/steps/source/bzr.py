@@ -89,21 +89,16 @@ class Bzr(Source):
         d.addErrback(self.failed)
         return d
 
+    @defer.inlineCallbacks
     def incremental(self):
-        d = self._sourcedirIsUpdatable()
-        def _cmd(updatable):
-            if updatable:
-                command = ['update']
-            else:
-                command = ['checkout', self.repourl, '.']
-
+        updatable = yield self._sourcedirIsUpdatable()
+        if updatable:
+            command = ['update']
             if self.revision:
                 command.extend(['-r', self.revision])
-            return command
-
-        d.addCallback(_cmd)
-        d.addCallback(self._dovccmd)
-        return d
+            yield self._dovccmd(command)
+        else:
+            yield self._doFull()
 
     @defer.inlineCallbacks
     def full(self):
