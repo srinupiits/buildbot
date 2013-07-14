@@ -20,7 +20,7 @@ from urlparse import urlparse, urlunparse
 from string import lower
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
@@ -106,14 +106,8 @@ class SVN(Source):
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            # blow away the old (un-updatable) directory
-            yield self.runRmdir(self.workdir)
-
-            # then do a checkout
-            checkout_cmd = ['checkout', self.repourl, '.']
-            if self.revision:
-                checkout_cmd.extend(["--revision", str(self.revision)])
-            yield self._dovccmd(checkout_cmd)
+            # blow away the old (un-updatable) directory and checkout
+            yield self.clobber()
         elif self.method == 'clean':
             yield self.clean()
         elif self.method == 'fresh':
@@ -124,29 +118,18 @@ class SVN(Source):
         updatable = yield self._sourcedirIsUpdatable()
 
         if not updatable:
-            # blow away the old (un-updatable) directory
-            yield self.runRmdir(self.workdir)
-
-            # and plan to do a checkout
-            command = ['checkout', self.repourl, '.']
+            # blow away the old (un-updatable) directory and checkout
+            yield self.clobber()
         else:
             # otherwise, do an update
             command = ['update']
-
-        if self.revision:
-            command.extend(['--revision', str(self.revision)])
-
-        yield self._dovccmd(command)
+            if self.revision:
+                command.extend(['--revision', str(self.revision)])
+            yield self._dovccmd(command)
 
     def clobber(self):
         d = self.runRmdir(self.workdir)
-        checkout_cmd = ['checkout', self.repourl, '.']
-        if self.revision:
-            checkout_cmd.extend(["--revision", str(self.revision)])
-
-        d.addCallback(lambda _: self._dovccmd(checkout_cmd))
-        if self.retry:
-            d.addCallback(self._retry, self.clobber)
+        d.addCallback(lambda _: self._checkout())
         return d
 
     def fresh(self):
@@ -209,7 +192,7 @@ class SVN(Source):
         return d
 
 
-    def _dovccmd(self, command, collectStdout=False):
+    def _dovccmd(self, command, collectStdout=False, abandonOnFailure=True):
         assert command, "No command specified"
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
@@ -230,7 +213,7 @@ class SVN(Source):
         log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if cmd.didFail():
+            if cmd.didFail() and abandonOnFailure:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -437,3 +420,32 @@ class SVN(Source):
             return canonical_uri[:-1]
         else:
             return canonical_uri
+
+    def _checkout(self):
+        checkout_cmd = ['checkout', self.repourl, '.']
+        if self.revision:
+            checkout_cmd.extend(["--revision", str(self.revision)])
+        if self.retry:
+            abandonOnFailure = (self.retry[1] <= 0)
+        else:
+            abandonOnFailure = True
+        d = self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)
+        def _retry(res):
+            if self.stopped or res == 0:
+                return res
+            delay, repeats = self.retry
+            if repeats > 0:
+                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+                self.retry = (delay, repeats-1)
+                df = defer.Deferred()
+                df.addCallback(lambda _: self.runRmdir(self.workdir))
+                df.addCallback(lambda _: self._checkout())
+                reactor.callLater(delay, df.callback, None)
+                return df
+            return res
+
+        if self.retry:
+            d.addCallback(_retry)
+        return d
+        

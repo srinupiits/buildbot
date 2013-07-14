@@ -16,7 +16,7 @@
 import os
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
@@ -126,7 +126,7 @@ class Bzr(Source):
         else:
             raise ValueError("Unknown method, check your configuration")
 
-    def clobber(self):
+    def _clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
@@ -136,9 +136,11 @@ class Bzr(Source):
                 raise RuntimeError("Failed to delete directory")
             return res
         d.addCallback(lambda _: checkRemoval(cmd.rc))
+        return d
+
+    def clobber(self):
+        d = self._clobber()
         d.addCallback(lambda _: self._doFull())
-        if self.retry:
-            d.addCallback(self._retry, self.clobber)
         return d
 
     def copy(self):
@@ -178,7 +180,29 @@ class Bzr(Source):
         command = ['checkout', self.repourl, '.']
         if self.revision:
             command.extend(['-r', self.revision])
-        d = self._dovccmd(command)
+
+        if self.retry:
+            abandonOnFailure = (self.retry[1] <= 0)
+        else:
+            abandonOnFailure = True
+        d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+        def _retry(res):
+            if self.stopped or res == 0:
+                return res
+            delay, repeats = self.retry
+            if repeats > 0:
+                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+                self.retry = (delay, repeats-1)
+                df = defer.Deferred()
+                df.addCallback(lambda _: self._clobber())
+                df.addCallback(lambda _: self._doFull())
+                reactor.callLater(delay, df.callback, None)
+                return df
+            return res
+
+        if self.retry:
+            d.addCallback(_retry)
         return d
 
     def finish(self, res):
