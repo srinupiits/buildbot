@@ -216,7 +216,6 @@ class SVN(Source):
                                            timeout=self.timeout,
                                            collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
-        log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
             if cmd.didFail() and abandonOnFailure:
