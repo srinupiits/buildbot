@@ -174,7 +174,7 @@ class SVN(Source):
             if self.username:
                 export_cmd.extend(['--username', self.username])
             if self.password:
-                export_cmd.extend(['--password', self.password])
+                export_cmd.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
             if self.extra_args:
                 export_cmd.extend(self.extra_args)
             export_cmd.extend(['source', self.workdir])
