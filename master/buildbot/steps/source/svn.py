@@ -204,7 +204,7 @@ class SVN(Source):
         if self.username:
             command.extend(['--username', self.username])
         if self.password:
-            command.extend(['--password', self.password])
+            command.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
         if self.depth:
             command.extend(['--depth', self.depth])
         if self.extra_args:
