@@ -53,6 +53,7 @@ class RemoteCommand(pb.Referenceable):
         self.collectStderr = collectStderr
         self.stdout = ''
         self.stderr = ''
+        self.updates = {}
 
         self._startTime = None
         self._remoteElapsed = None
@@ -106,7 +107,6 @@ class RemoteCommand(pb.Referenceable):
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
     def _start(self):
-        self.updates = {}
         self._startTime = util.now()
 
         # This method only initiates the remote command.

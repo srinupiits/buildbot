@@ -196,3 +196,20 @@ class StatFile(base.Command):
             self.sendStatus({'rc': 0})
         except:
             self.sendStatus({'rc': 1})
+
+class ListDir(base.Command):
+    
+    header = "listdir"
+
+    def start(self):
+        args = self.args
+        assert args['dir'] is not None
+        directory = os.path.join(self.builder.basedir, args['dir'])
+        try:
+            files = os.listdir(directory)
+            self.sendStatus({'list' : files})
+            self.sendStatus({'rc': 0})
+        except:
+            self.sendStatus({'rc': 1})
+
+

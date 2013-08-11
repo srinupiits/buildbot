@@ -478,8 +478,8 @@ class Git(Source):
             return None
         return changes[-1].revision
 
-    def _sourcedirIsUpdatable(self):
-        return self.pathExists(self.build.path_module.join(self.workdir, '.git'))
+    # def _sourcedirIsUpdatable(self):
+    #     return self.pathExists(self.build.path_module.join(self.workdir, '.git'))
 
     def _updateSubmodule(self, _):
         if self.submodules:
@@ -515,4 +515,20 @@ class Git(Source):
                 self.supportsBranch = False
             return gitInstalled
         d.addCallback(checkSupport)
+        return d
+
+    def _sourcedirIsUpdatable(self):
+        cmd = buildstep.RemoteCommand('listdir', 
+                                       {'dir' : self.workdir,
+                                        'logEnviron' : self.logEnviron,
+                                        'timeout' : self.timeout,})
+        cmd.useLog(self.stdio_log, False)
+        d = self.runCommand(cmd)
+        def check(_):
+            files = cmd.updates['list'][0]
+            if '.git' in files:
+                return True
+            else:
+                return False
+        d.addCallback(check)
         return d
