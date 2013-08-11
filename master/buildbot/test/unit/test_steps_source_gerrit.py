@@ -44,7 +44,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -87,7 +87,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
