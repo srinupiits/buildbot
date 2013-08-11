@@ -44,7 +44,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -83,7 +83,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -123,7 +123,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -170,7 +170,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 0,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -226,7 +226,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -273,7 +273,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -314,7 +314,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['file1', 'file2'])
+            + Expect.update('files',['file1', 'file2'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
@@ -349,7 +349,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d'])
@@ -385,7 +385,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -415,7 +415,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', '--reference', 'path/to/reference/repo',
@@ -445,7 +445,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -576,7 +576,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -612,7 +612,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -648,7 +648,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -689,7 +689,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -728,7 +728,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'])
@@ -768,7 +768,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'cat-file', '-e', 'abcdef01'])
@@ -801,7 +801,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'])
@@ -913,7 +913,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -957,7 +957,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -1004,7 +1004,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -1049,7 +1049,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -1098,7 +1098,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                  timeout=1200)),
             Expect('listdir', {'dir': 'source', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='source',
                         command=['git', 'fetch', '-t',
@@ -1141,7 +1141,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1289,7 +1289,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1324,7 +1324,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1374,7 +1374,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',[])
+            + Expect.update('files',[])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -1414,7 +1414,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'])
@@ -1453,7 +1453,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'],
@@ -1496,7 +1496,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': False,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-d', '-x'],
@@ -1543,7 +1543,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -1594,7 +1594,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -1891,7 +1891,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 1,
             Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
                                'timeout': 1200})
-            + Expect.update('list',['.git'])
+            + Expect.update('files',['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=prefix + ['clean', '-f', '-d'])

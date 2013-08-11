@@ -207,7 +207,7 @@ class ListDir(base.Command):
         directory = os.path.join(self.builder.basedir, args['dir'])
         try:
             files = os.listdir(directory)
-            self.sendStatus({'list' : files})
+            self.sendStatus({'files' : files})
             self.sendStatus({'rc': 0})
         except:
             self.sendStatus({'rc': 1})

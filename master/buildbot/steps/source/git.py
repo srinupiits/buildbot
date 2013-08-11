@@ -529,7 +529,7 @@ class Git(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def check(_):
-            files = cmd.updates['list'][0]
+            files = cmd.updates['files'][0]
             if '.git' in files:
                 return "update"
             elif len(files) > 0:
