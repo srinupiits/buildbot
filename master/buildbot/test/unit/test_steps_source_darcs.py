@@ -163,3 +163,66 @@ class TestDarcs(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
+
+    def test_mode_full_clobber_revision(self):
+        self.setupStep(
+                darcs.Darcs(repourl='http://localhost/darcs',
+                                    mode='full', method='clobber'),
+                            dict(revision='abcdef01'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+                                        reader=ExpectRemoteRef(_FileReader),
+                                        slavedest='.darcs-context', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            ExpectShell(workdir='.',
+                        command=['darcs', 'get', '--verbose', '--lazy',
+                                 '--repo-name', 'wkdir', '--context',
+                                 '.darcs-context', 'http://localhost/darcs'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', 'changes', '--max-count=1'])
+            + ExpectShell.log('stdio',
+                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        return self.runStep()
+
+    def test_mode_incremental_no_existing_repo(self):
+        self.setupStep(
+                darcs.Darcs(repourl='http://localhost/darcs',
+                                    mode='incremental'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/_darcs',
+                                logEnviron=True))
+            + 1,
+            ExpectShell(workdir='.',
+                        command=['darcs', 'get', '--verbose', '--lazy',
+                                 '--repo-name', 'wkdir', 'http://localhost/darcs'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', 'changes', '--max-count=1'])
+            + ExpectShell.log('stdio',
+                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        return self.runStep()
