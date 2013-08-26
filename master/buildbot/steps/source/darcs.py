@@ -49,7 +49,6 @@ class Darcs(Source):
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
-
         if repourl is None:
             errors.append("you must provide repourl")
 

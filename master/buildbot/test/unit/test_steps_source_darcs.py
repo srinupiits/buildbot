@@ -20,9 +20,9 @@ from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import config, sourcesteps
 from buildbot.test.fake.remotecommand import ExpectRemoteRef, ExpectShell, Expect
 from buildbot.steps.transfer import _FileReader
+from buildbot import config
 
-
-class TestDarcs(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
+class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpSourceStep()
@@ -30,6 +30,17 @@ class TestDarcs(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.
     def tearDown(self):
         return self.tearDownSourceStep()
 
+    def test_no_empty_step_config(self):
+        self.assertRaises(config.ConfigErrors, lambda: darcs.Darcs())
+
+    def test_incorrect_method(self):
+        self.assertRaises(config.ConfigErrors, lambda:
+                              darcs.Darcs(repourl='http://localhost/darcs',
+                                          mode='full', method='fresh'))
+
+    def test_no_repo_url(self):
+        self.assertRaises(config.ConfigErrors, lambda:
+                              darcs.Darcs(mode='full', method='fresh'))
 
     def test_mode_full_clobber(self):
         self.setupStep(
@@ -226,3 +237,4 @@ class TestDarcs(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
+
