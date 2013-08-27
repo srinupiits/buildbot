@@ -14,10 +14,9 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from twisted.python.reflect import namedModule
 from buildbot.steps.source import darcs
-from buildbot.status.results import SUCCESS, FAILURE
-from buildbot.test.util import config, sourcesteps
+from buildbot.status.results import SUCCESS
+from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectRemoteRef, ExpectShell, Expect
 from buildbot.steps.transfer import _FileReader
 from buildbot import config
