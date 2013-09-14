@@ -15,8 +15,6 @@
 
 ## Source step code for Monotone
 
-import os
-
 from twisted.python import log
 from twisted.internet import defer, reactor
 
@@ -33,7 +31,7 @@ class Monotone(Source):
 
     renderables = ['repourl']
     possible_modes = ('incremental', 'full')
-    possible_methods = ('clobber', 'copy', 'full', 'clean')
+    possible_methods = ('clobber', 'copy', 'fresh', 'clean')
 
     def __init__(self, repourl=None, branch=None, database=None, mode='incremental',
                  method=None, **kwargs):
@@ -122,15 +120,7 @@ class Monotone(Source):
             yield self._retryClone()
         else:
             yield self._pull()
-            command = ['mtn', 'update',
-                       '--db=%s' % (self.database)]
-            if self.revision:
-                command.extend(['--revision', self.revision])
-            else:
-                command.extend(["-r", "h:" + self.branch])
-            command.extend(["-b", self.branch])
-
-            yield self._dovccmd(command)
+            yield self._update()
 
     def clobber(self):
         d = self.runRmdir(self.workdir)
@@ -185,11 +175,12 @@ class Monotone(Source):
             commands.append(['mtn', 'ls', 'ignored'])
         for cmd in commands:
             stdout = yield self._dovccmd(cmd, collectStdout=True)
+            if len(stdout) == 0:
+                continue
             for filename in stdout.strip().split('\n'):
                 filename = self.workdir+'/'+str(filename)
                 files.append(filename)
 
-        print files
         if len(files) == 0:
             rc = 0
         else:
@@ -202,6 +193,8 @@ class Monotone(Source):
             log.msg("Failed removing files")
             raise buildstep.BuildStepFailed()
 
+        yield self._update()
+
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
@@ -212,11 +205,11 @@ class Monotone(Source):
         defer.returnValue(0)
 
     def _clone(self, abandonOnFailure=False):
-        command = ['mtn', '--db=%s' % (self.database), 'clone', '.', self.sourcedata]
+        command = ['mtn', '--db=%s' % (self.database), 'clone', self.sourcedata]
         # if self.revision:
         #     command.extend(['--revision', self.revision])
         command.extend(['--branch', self.branch])
-
+        command.append('.')
         d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
         return d
 
@@ -226,6 +219,18 @@ class Monotone(Source):
         if self.revision:
             command.extend(['--revision', self.revision])
         command.extend(['--branch', self.branch])
+
+        d.addCallback(lambda _: self._dovccmd(command, abandonOnFailure=abandonOnFailure))
+        return d
+
+    def _update(self, abandonOnFailure=False):
+        d = self._pull()
+        command = ['mtn', 'update', '--db=%s' % (self.database)]
+        if self.revision:
+            command.extend(['--revision', self.revision])
+        else:
+            command.extend(["-r", "h:" + self.branch])
+        command.extend(["-b", self.branch])
 
         d.addCallback(lambda _: self._dovccmd(command, abandonOnFailure=abandonOnFailure))
         return d
