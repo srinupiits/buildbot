@@ -33,7 +33,7 @@ class Monotone(Source):
     possible_modes = ('incremental', 'full')
     possible_methods = ('clobber', 'copy', 'fresh', 'clean')
 
-    def __init__(self, repourl=None, branch=None, database=None, mode='incremental',
+    def __init__(self, repourl=None, branch=None, progress=False, mode='incremental',
                  method=None, **kwargs):
 
         self.repourl = repourl
@@ -43,6 +43,7 @@ class Monotone(Source):
         self.sourcedata = "%s?%s" % (self.repourl, self.branch)
         self.databasename = 'db.mtn'
         self.database = '../db.mtn'
+        self.progress = progress
         Source.__init__(self, **kwargs)
         errors = []
 
