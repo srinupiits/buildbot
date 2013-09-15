@@ -80,7 +80,7 @@ class Monotone(Source):
         d.addCallback(lambda _: self.sourcedirIsPatched())
         def checkPatched(patched):
             if patched:
-                return self.cleanWorkdir()
+                return self.clean()
             else:
                 return 0
         d.addCallback(checkPatched)
@@ -111,10 +111,13 @@ class Monotone(Source):
             yield self._checkout(dopull=False)
         elif self.method == 'clean':
             yield self.clean()
+            yield self._update()
         elif self.method == 'fresh':
             yield self.clean(False)
+            yield self._update()
         else:
             raise ValueError("Unknown method, check your configuration")
+
 
     @defer.inlineCallbacks
     def incremental(self):
@@ -199,7 +202,7 @@ class Monotone(Source):
             log.msg("Failed removing files")
             raise buildstep.BuildStepFailed()
 
-        yield self._update()
+
 
     @defer.inlineCallbacks
     def removeFiles(self, files):
