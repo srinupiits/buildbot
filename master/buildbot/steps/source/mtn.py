@@ -108,7 +108,7 @@ class Monotone(Source):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self._retryClone()
-            yield self._checkout(dopull=False)
+            yield self._checkout()
         elif self.method == 'clean':
             yield self.clean()
             yield self._update()
@@ -124,7 +124,7 @@ class Monotone(Source):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self._retryClone()
-            yield self._checkout(dopull=False)
+            yield self._checkout()
         else:
             yield self._pull()
             yield self._update(dopull=False)
@@ -133,7 +133,7 @@ class Monotone(Source):
         d = self.runRmdir(self.workdir)
         d.addCallback(lambda _: self.runRmdir(self.databasename))
         d.addCallback(lambda _: self._retryClone())
-        d.addCallback(lambda _: self._checkout(dopull=False))
+        d.addCallback(lambda _: self._checkout())
         return d
 
     def copy(self):
@@ -219,18 +219,13 @@ class Monotone(Source):
         d.addCallback(lambda _: self._pull())
         return d
 
-    def _checkout(self, dopull=True, abandonOnFailure=False):
-        if dopull:
-            d = self._pull()
-        else:
-            d = defer.succeed(0)
+    def _checkout(self, abandonOnFailure=False):
         command = ['mtn', 'checkout', '.', '--db=%s' % (self.database)]
         if self.revision:
             command.extend(['--revision', self.revision])
         command.extend(['--branch', self.branch])
 
-        d.addCallback(lambda _: self._dovccmd(command, abandonOnFailure=abandonOnFailure))
-        return d
+        return self._dovccmd(command, abandonOnFailure=abandonOnFailure)
 
     def _update(self, dopull=True, abandonOnFailure=False):
         if dopull:
