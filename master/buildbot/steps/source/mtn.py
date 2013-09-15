@@ -108,6 +108,7 @@ class Monotone(Source):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self._retryClone()
+            yield self._checkout(dopull=False)
         elif self.method == 'clean':
             yield self.clean()
         elif self.method == 'fresh':
@@ -120,14 +121,16 @@ class Monotone(Source):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self._retryClone()
+            yield self._checkout(dopull=False)
         else:
             yield self._pull()
-            yield self._update()
+            yield self._update(dopull=False)
 
     def clobber(self):
         d = self.runRmdir(self.workdir)
         d.addCallback(lambda _: self.runRmdir(self.databasename))
         d.addCallback(lambda _: self._retryClone())
+        d.addCallback(lambda _: self._checkout(dopull=False))
         return d
 
     def copy(self):
@@ -211,7 +214,6 @@ class Monotone(Source):
         command = ['mtn', 'db', 'init', '--db', self.database]
         d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
         d.addCallback(lambda _: self._pull())
-        d.addCallback(lambda _: self._checkout(dopull=False))
         return d
 
     def _checkout(self, dopull=True, abandonOnFailure=False):
@@ -227,8 +229,11 @@ class Monotone(Source):
         d.addCallback(lambda _: self._dovccmd(command, abandonOnFailure=abandonOnFailure))
         return d
 
-    def _update(self, abandonOnFailure=False):
-        d = self._pull()
+    def _update(self, dopull=True, abandonOnFailure=False):
+        if dopull:
+            d = self._pull()
+        else:
+            d = defer.succeed(0)
         command = ['mtn', 'update', '--db=%s' % (self.database)]
         if self.revision:
             command.extend(['--revision', self.revision])
@@ -239,14 +244,14 @@ class Monotone(Source):
         d.addCallback(lambda _: self._dovccmd(command, abandonOnFailure=abandonOnFailure))
         return d
 
-    def _pull(self):
+    def _pull(self, abandonOnFailure=False):
         command = ['mtn', 'pull', self.sourcedata,
                    '--db=%s' % (self.database)]
         if self.progress:
             command.extend(['--ticker=dot'])
         else:
             command.extend(['--ticker=none'])
-        d = self._dovccmd(command)
+        d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
         return d
 
     def _retryClone(self):
@@ -266,6 +271,7 @@ class Monotone(Source):
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self.runRmdir(self.workdir))
+                df.addCallback(lambda _: self.runRmdir(self.databasename))
                 df.addCallback(lambda _: self._retryClone())
                 reactor.callLater(delay, df.callback, None)
                 return df
@@ -329,9 +335,14 @@ class Monotone(Source):
         return d
 
     def _sourcedirIsUpdatable(self):
-        return (self.pathExists(self.build.path_module.join(self.workdir, '_MTN')) and
-                self.pathExists('db.mtn'))
-
+        d = self.pathExists(self.build.path_module.join(self.workdir, '_MTN'))
+        def cont(res):
+            if res:
+                d.addCallback(lambda _: self.pathExists('db.mtn'))
+            else:
+                return False
+        d.addCallback(cont)
+        return d
 
     def finish(self, res):
         d = defer.succeed(res)
