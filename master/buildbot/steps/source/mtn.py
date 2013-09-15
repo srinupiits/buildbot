@@ -41,6 +41,7 @@ class Monotone(Source):
         self.mode = mode
         self.branch = branch
         self.sourcedata = "%s?%s" % (self.repourl, self.branch)
+        self.databasename = 'db.mtn'
         self.database = '../db.mtn'
         Source.__init__(self, **kwargs)
         errors = []
@@ -75,6 +76,7 @@ class Monotone(Source):
                 raise BuildSlaveTooOldError("Monotone is not installed on slave")
             return 0
         d.addCallback(checkInstall)
+        d.addCallback(lambda _: self._checkDb())
         d.addCallback(lambda _: self.sourcedirIsPatched())
         def checkPatched(patched):
             if patched:
@@ -124,6 +126,7 @@ class Monotone(Source):
 
     def clobber(self):
         d = self.runRmdir(self.workdir)
+        d.addCallback(lambda _: self.runRmdir(self.databasename))
         d.addCallback(lambda _: self._retryClone())
         return d
 
@@ -205,12 +208,10 @@ class Monotone(Source):
         defer.returnValue(0)
 
     def _clone(self, abandonOnFailure=False):
-        command = ['mtn', '--db=%s' % (self.database), 'clone', self.sourcedata]
-        # if self.revision:
-        #     command.extend(['--revision', self.revision])
-        command.extend(['--branch', self.branch])
-        command.append('.')
+        command = ['mtn', 'db', 'init', '--db', self.database]
         d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+        d.addCallback(lambda _: self._pull())
+        d.addCallback(lambda _: self._checkout())
         return d
 
     def _checkout(self, abandonOnFailure=False):
@@ -306,8 +307,28 @@ class Monotone(Source):
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
+    def _checkDb(self):
+        d = self._dovccmd(['mtn', 'db', 'info', '--db', self.database], collectStdout=True)
+        def checkInfo(stdout):
+            if stdout.find("does not exist") > 0:
+                log.msg("Database does not exist")
+                return 0
+            elif stdout.find("(migration needed)") > 0:
+                log.msg("Older format database found, migrating it")
+                return self._dovccmd(['mtn', 'db', 'migrate', '--db', self.database])
+            elif stdout.find("(too new, cannot use)") > 0:
+                log.msg("The database is of a newer format than mtn can handle...  Abort!")
+                raise buildstep.BuildStepFailed()
+            else:
+                log.msg("Database exists and compatible")
+                return 0
+        d.addCallback(checkInfo)
+        return d
+
     def _sourcedirIsUpdatable(self):
-        return self.pathExists(self.build.path_module.join(self.workdir, '_MTN'))
+        return (self.pathExists(self.build.path_module.join(self.workdir, '_MTN')) and
+                self.pathExists('db.mtn'))
+
 
     def finish(self, res):
         d = defer.succeed(res)
@@ -319,4 +340,3 @@ class Monotone(Source):
         d.addCallback(_gotResults)
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
-
