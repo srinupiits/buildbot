@@ -38,7 +38,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             + ExpectShell.log('stdio',
-                stdout='git version 1.7.5')
+                stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'db', 'info', '--db', '../db.mtn'])
@@ -89,7 +89,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             + ExpectShell.log('stdio',
-                stdout='git version 1.7.5')
+                stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'db', 'info', '--db', '../db.mtn'])
@@ -157,7 +157,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             + ExpectShell.log('stdio',
-                stdout='git version 1.7.5')
+                stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'db', 'info', '--db', '../db.mtn'])
@@ -218,7 +218,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
             ExpectShell(workdir='wkdir',
                         command=['mtn', '--version'])
             + ExpectShell.log('stdio',
-                stdout='git version 1.7.5')
+                stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'db', 'info', '--db', '../db.mtn'])
@@ -249,7 +249,98 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
             + ExpectShell.log('stdio',
                 stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
-)
+            )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
+
+    def test_mode_full_clobber(self):
+        self.setupStep(
+            mtn.Monotone(repourl='mtn://localhost/monotone',
+                         mode='full', method='clobber', branch='master'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', '--version'])
+            + ExpectShell.log('stdio',
+                stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'db', 'info', '--db', '../db.mtn'])
+            + ExpectShell.log('stdio',
+                stdout='')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='db.mtn',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'db', 'init', '--db', '../db.mtn'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                                 '--db=../db.mtn', '--ticker=dot'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'checkout', '.', '--db=../db.mtn', '--branch', 'master'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'automate', 'select', 'w:'])
+            + ExpectShell.log('stdio',
+                stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
+            + 0,
+            )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
+        return self.runStep()
+
+    def test_mode_incremental(self):
+        self.setupStep(
+            mtn.Monotone(repourl='mtn://localhost/monotone',
+                         mode='full', method='clean', branch='master'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', '--version'])
+            + ExpectShell.log('stdio',
+                stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'db', 'info', '--db', '../db.mtn'])
+            + ExpectShell.log('stdio',
+                stdout='')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/_MTN',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='db.mtn',
+                                logEnviron=True))
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'db', 'init', '--db', '../db.mtn'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                                 '--db=../db.mtn', '--ticker=dot'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'checkout', '.', '--db=../db.mtn', '--branch', 'master'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', 'automate', 'select', 'w:'])
+            + ExpectShell.log('stdio',
+                stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
+            + 0,
+            )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
+        return self.runStep()
+
