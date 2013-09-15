@@ -211,11 +211,14 @@ class Monotone(Source):
         command = ['mtn', 'db', 'init', '--db', self.database]
         d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
         d.addCallback(lambda _: self._pull())
-        d.addCallback(lambda _: self._checkout())
+        d.addCallback(lambda _: self._checkout(dopull=False))
         return d
 
-    def _checkout(self, abandonOnFailure=False):
-        d = self._pull()
+    def _checkout(self, dopull=True, abandonOnFailure=False):
+        if dopull:
+            d = self._pull()
+        else:
+            d = defer.succeed(0)
         command = ['mtn', 'checkout', '.', '--db=%s' % (self.database)]
         if self.revision:
             command.extend(['--revision', self.revision])
