@@ -992,8 +992,6 @@ Monotone
 
 .. py:class:: buildbot.steps.source.mtn.Monotone
 
-.. _Source-Checkout-Slave-Side:
-
 The :bb:step:`Monotone` build step performs a `Monotone <http://www.monotone.ca/>`_
 checkout or update. ::
 
@@ -1059,6 +1057,8 @@ Monotone step takes the following arguments:
       performs all the incremental checkout behavior in ``source``
       directory.
 
+
+.. _Source-Checkout-Slave-Side:
 
 Source Checkout (Slave-Side)
 ----------------------------
